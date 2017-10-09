@@ -2,6 +2,7 @@ package pl.net.gazda;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteSpringBean;
+import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.ignite.resources.SpringResource;
@@ -34,11 +35,9 @@ public class IgniteSpringBeanServiceConfigurationTest {
     @ComponentScan("pl.net.gazda")
     public static class SpringBeansConfiguration {
 
-        @Bean(name="igniteSpringBean")
-        public IgniteSpringBean igniteSpringBean(IgniteConfiguration configuration) {
-            IgniteSpringBean igniteSpringBean = new IgniteSpringBean();
-            igniteSpringBean.setConfiguration(configuration);
-            return igniteSpringBean;
+        @Bean(destroyMethod = "close")
+        public Ignite ignite(IgniteConfiguration configuration) {
+            return Ignition.start(configuration);
         }
 
         @Bean
@@ -93,7 +92,9 @@ public class IgniteSpringBeanServiceConfigurationTest {
         public void cancel(ServiceContext ctx) {}
 
         @Override
-        public void init(ServiceContext ctx) throws Exception {}
+        public void init(ServiceContext ctx) throws Exception {
+            System.out.println("init");
+        }
 
         @Override
         public void execute(ServiceContext ctx) throws Exception {}
