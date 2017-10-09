@@ -9,6 +9,7 @@ import org.apache.ignite.resources.SpringResource;
 import org.apache.ignite.services.Service;
 import org.apache.ignite.services.ServiceConfiguration;
 import org.apache.ignite.services.ServiceContext;
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,10 @@ public class IgniteSpringBeanServiceConfigurationTest {
 
     @Test
     public void should_startContextAndInjectIgniteProxy() {
-
+        context.getBean(Ignite.class)
+                .services()
+                .serviceProxy(SimpleIgniteService.NAME, IgniteService.class, false)
+                .performSomeOperation();
     }
 
     @Configuration
@@ -59,32 +63,49 @@ public class IgniteSpringBeanServiceConfigurationTest {
 
     @Component("springService")
     public static class SpringService {
+        private final Logger LOG = Logger.getLogger(SpringService.class);
         private final SpringSubService subService;
 
         @Autowired
         public SpringService(SpringSubService subService) {
             this.subService = subService;
         }
+
+        public void performSomeOperation() {
+            LOG.info("performSomeOperation");
+            subService.performSomeOperation();
+        }
     }
 
     @Component
     public static class SpringSubService {
+        private final Logger LOG = Logger.getLogger(SimpleIgniteService.class);
         private final Ignite ignite;
 
         @Autowired
         public SpringSubService(Ignite ignite) {
             this.ignite = ignite;
         }
+
+        public void performSomeOperation() {
+            LOG.info("performSomeOperation");
+            LOG.info(ignite.cluster());
+        }
+    }
+
+    public interface IgniteService {
+         void performSomeOperation();
     }
 
     @Component
-    public static class SimpleIgniteService implements Service {
+    public static class SimpleIgniteService implements Service, IgniteService {
+        Logger LOG = Logger.getLogger(SimpleIgniteService.class);
+
         public static final String NAME = "IgniteService";
 
         @IgniteInstanceResource
         private transient Ignite ignite;
 
-        //@Autowired
         @SpringResource(resourceName = "springService")
         private transient SpringService springService;
 
@@ -93,11 +114,15 @@ public class IgniteSpringBeanServiceConfigurationTest {
 
         @Override
         public void init(ServiceContext ctx) throws Exception {
-            System.out.println("init");
         }
 
         @Override
         public void execute(ServiceContext ctx) throws Exception {}
 
+        @Override
+        public void performSomeOperation() {
+            LOG.info("performSomeOperation");
+            springService.performSomeOperation();
+        }
     }
 }
