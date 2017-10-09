@@ -10,10 +10,16 @@ import org.apache.ignite.services.ServiceConfiguration;
 import org.apache.ignite.services.ServiceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.target.LazyInitTargetSource;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,10 +38,25 @@ public class IgniteSpringBeanServiceConfigurationTest {
 
     @Configuration
     @ComponentScan("pl.net.gazda")
-    public static class SpringBeansConfiguration {
+    public static class SpringBeansConfiguration implements ApplicationContextAware {
+        private ApplicationContext applicationContext;
+
+        @Primary
+        @Bean(name="igniteLazySpringBean")
+        public ProxyFactoryBean igniteLazySpringBean() {
+            LazyInitTargetSource lazyInitTargetSource = new LazyInitTargetSource();
+            lazyInitTargetSource.setTargetClass(Ignite.class);
+            lazyInitTargetSource.setTargetBeanName("igniteSpringBean");
+            lazyInitTargetSource.setBeanFactory(applicationContext);
+
+            ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+            proxyFactoryBean.setTargetSource(lazyInitTargetSource);
+            proxyFactoryBean.setProxyTargetClass(false);
+            return proxyFactoryBean;
+        }
 
         @Bean(name="igniteSpringBean")
-        public IgniteSpringBean igniteSpringBean(IgniteConfiguration configuration) {
+        public Ignite igniteSpringBean(IgniteConfiguration configuration) {
             IgniteSpringBean igniteSpringBean = new IgniteSpringBean();
             igniteSpringBean.setConfiguration(configuration);
             return igniteSpringBean;
@@ -55,6 +76,11 @@ public class IgniteSpringBeanServiceConfigurationTest {
             configuration.setName(SimpleIgniteService.NAME);
             configuration.setMaxPerNodeCount(1);
             return configuration;
+        }
+
+        @Override
+        public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+            this.applicationContext = applicationContext;
         }
     }
 
@@ -85,7 +111,6 @@ public class IgniteSpringBeanServiceConfigurationTest {
         @IgniteInstanceResource
         private transient Ignite ignite;
 
-        //@Autowired
         @SpringResource(resourceName = "springService")
         private transient SpringService springService;
 
