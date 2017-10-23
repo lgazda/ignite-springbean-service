@@ -13,28 +13,53 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = IgniteSpringBeanServiceConfigurationTest.SpringBeansConfiguration.class)
 public class IgniteSpringBeanServiceConfigurationTest {
     @Test
     public void should_startContextAndInjectIgniteProxy() {
+        startSpringContext(IgniteServerSpringBeansConfiguration.class);
+    }
 
+    private void startSpringContext(Class<IgniteServerSpringBeansConfiguration> configurationClass) {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+        ctx.register(configurationClass);
+        ctx.refresh();
     }
 
     @Configuration
     @ComponentScan("pl.net.gazda")
-    public static class SpringBeansConfiguration {
+    public static class IgniteClientSpringBeansConfiguration {
+
+        @Bean(name="igniteSpringBean")
+        public IgniteSpringBean igniteSpringBean(IgniteConfiguration configuration) {
+            IgniteSpringBean igniteSpringBean = new IgniteSpringBean();
+            igniteSpringBean.setConfiguration(configuration);
+            return igniteSpringBean;
+        }
+
+        @Bean
+        public IgniteConfiguration igniteConfiguration() {
+            IgniteConfiguration configuration = new IgniteConfiguration();
+            configuration.setIgniteInstanceName("Client node");
+            configuration.setClientMode(true);
+            return configuration;
+        }
+    }
+
+    @Configuration
+    @ComponentScan("pl.net.gazda")
+    public static class IgniteServerSpringBeansConfiguration {
 
         @Bean(name="igniteSpringBean")
         public IgniteSpringBean igniteSpringBean(IgniteConfiguration configuration) {
@@ -46,6 +71,8 @@ public class IgniteSpringBeanServiceConfigurationTest {
         @Bean
         public IgniteConfiguration igniteConfiguration(ServiceConfiguration[] serviceConfigurations) {
             IgniteConfiguration configuration = new IgniteConfiguration();
+            configuration.setClientMode(false);
+            configuration.setIgniteInstanceName("Server Node");
             //https://issues.apache.org/jira/browse/IGNITE-6555
             //configuration.setServiceConfiguration(serviceConfigurations);
             return configuration;
@@ -57,6 +84,7 @@ public class IgniteSpringBeanServiceConfigurationTest {
             configuration.setService(igniteService);
             configuration.setName(SimpleIgniteService.NAME);
             configuration.setMaxPerNodeCount(1);
+            configuration.setNodeFilter(node -> !node.isClient());
             return configuration;
         }
 
@@ -66,6 +94,7 @@ public class IgniteSpringBeanServiceConfigurationTest {
             configuration.setService(igniteService);
             configuration.setName(SimpleIgniteService.NAME + "_2");
             configuration.setMaxPerNodeCount(1);
+            configuration.setNodeFilter(node -> !node.isClient());
             return configuration;
         }
     }
