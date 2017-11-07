@@ -21,11 +21,12 @@ public class ClientService {
 
     @Scheduled(fixedRate = 1000, initialDelay = 1000)
     public void simulateIgniteServiceExecution() {
-        LOG.info("Executing service. Result:" + igniteService().someOperation());
+        LOG.info("Executing service and getting result: " + igniteService().someOperation());
     }
 
     private IgniteBusinessService igniteService() {
-        return ignite.services(getServerCluster()).serviceProxy(IgniteBusinessService.NAME, IgniteBusinessService.class, false);
+        return ignite.services(getServerCluster()) //getting service from all server nodes
+                .serviceProxy(IgniteBusinessService.NAME, IgniteBusinessService.class, false);
     }
 
     private ClusterGroup getServerCluster() {

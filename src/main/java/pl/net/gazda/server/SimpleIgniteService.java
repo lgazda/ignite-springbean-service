@@ -30,21 +30,21 @@ public class SimpleIgniteService implements IgniteBusinessService {
 
     @Override
     public void init(ServiceContext ctx) throws Exception {
-        LOG.info("Service is being initialized.");
+        LOG.info("Node: {} = service is being initialized.", localNode().id());
     }
 
     @Override
     public void execute(ServiceContext ctx) throws Exception {
-        LOG.info("Node: {} - service deployed",localNode().id());
-    }
-
-    private ClusterNode localNode() {
-        return ignite.cluster().forLocal().node();
+        LOG.info("Node: {} - service deployed.", localNode().id());
     }
 
     @Override
     public Object someOperation() {
-        LOG.info("Node: " + localNode().id() + "- delegating operation to spring service.");
+        LOG.info("Node: {} - delegating operation to spring service.", localNode().id());
         return springService.someOperation();
+    }
+
+    private ClusterNode localNode() {
+        return ignite.cluster().forLocal().node();
     }
 }
