@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="15" status="INFO">
+    <Properties>
+        <!-- empty - default value if no sys parameter is passed -->
+        <Property name="grid.log.dir">logs/</Property>
+        <Property name="logFileName">ignite.log</Property>
+        <Property name="patternLayout">%d [%t] %-5level %c - [%X{tracking-tag}] %msg%n</Property>
+        <Property name="mainLogRollingFilePattern">ignite.%i.log</Property>
+    </Properties>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="MainLogFile" />
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${sd:patternLayout}"/>
+        </Console>
+        <RollingRandomAccessFile name="MainLogFile" fileName="${sys:grid.log.dir}${sd:logFileName}" immediateFlush="true" append="true" filePattern="${sys:grid.log.dir}${sd:mainLogRollingFilePattern}">
+            <PatternLayout pattern="${sd:patternLayout}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy min="1" max="1" fileIndex="min" />
+        </RollingRandomAccessFile>
+    </Appenders>
+</Configuration>
