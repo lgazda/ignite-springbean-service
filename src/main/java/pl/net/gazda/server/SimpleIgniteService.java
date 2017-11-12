@@ -20,8 +20,8 @@ public class SimpleIgniteService implements IgniteBusinessService {
     @IgniteInstanceResource
     private transient Ignite ignite;
 
-    @SpringResource(resourceName = "springService")
-    private transient SpringService springService;
+    @SpringResource(resourceName = "springBusinessService")
+    private transient SpringBusinessService springBusinessService;
 
     @Override
     public void cancel(ServiceContext ctx) {
@@ -41,7 +41,7 @@ public class SimpleIgniteService implements IgniteBusinessService {
     @Override
     public Object someOperation() {
         LOG.info("Node: {} - delegating operation to spring service.", localNode().id());
-        return springService.someOperation();
+        return springBusinessService.someOperation();
     }
 
     private ClusterNode localNode() {
