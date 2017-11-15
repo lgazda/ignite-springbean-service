@@ -24,6 +24,16 @@ public class SimpleIgniteService implements IgniteBusinessService {
     private transient SpringBusinessService springBusinessService;
 
     @Override
+    public Object someOperation() {
+        LOG.info("Node: {} - delegating operation to spring service.", localNode().id());
+        return springBusinessService.someOperation();
+    }
+
+    private ClusterNode localNode() {
+        return ignite.cluster().forLocal().node();
+    }
+
+    @Override
     public void cancel(ServiceContext ctx) {
         LOG.info("Service is being canceled / un-deployed.");
     }
@@ -36,15 +46,5 @@ public class SimpleIgniteService implements IgniteBusinessService {
     @Override
     public void execute(ServiceContext ctx) throws Exception {
         LOG.info("Node: {} - service deployed.", localNode().id());
-    }
-
-    @Override
-    public Object someOperation() {
-        LOG.info("Node: {} - delegating operation to spring service.", localNode().id());
-        return springBusinessService.someOperation();
-    }
-
-    private ClusterNode localNode() {
-        return ignite.cluster().forLocal().node();
     }
 }
