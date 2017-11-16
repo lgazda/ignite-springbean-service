@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.net.gazda.common.BusinessService;
 
-@Service("springService")
+@Service("springBusinessService")
 public class SpringBusinessService implements BusinessService {
     private final SpringSubService subService;
 

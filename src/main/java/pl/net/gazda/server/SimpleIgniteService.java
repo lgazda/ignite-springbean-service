@@ -40,11 +40,11 @@ public class SimpleIgniteService implements IgniteBusinessService {
 
     @Override
     public void init(ServiceContext ctx) throws Exception {
-        LOG.info("Node: {} = service is being initialized.", localNode().id());
+        LOG.info("Node: {} = service is being initialized.", localNode());
     }
 
     @Override
     public void execute(ServiceContext ctx) throws Exception {
-        LOG.info("Node: {} - service deployed.", localNode().id());
+        LOG.info("Node: {} - service deployed.", localNode());
     }
 }

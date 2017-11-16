@@ -1,8 +1,8 @@
 # igniteservice
 
-# Ignite Service Deployment with Spring Configuration.
-We will to demonstrate how you can deploy and access Ignite service using Ignite Spring Bean configuration and what benefits such configuration gives.
-In the example I will simulate a situation when an ignite service is deployed on 2 server nodes and is being accessed/executed from a client node. 
+# Ignite Service and Service Deployment using Spring Bean Configuration.
+We will to demonstrate how you can implement, deploy and access Ignite service using Ignite Spring Bean configuration and what benefits such configuration gives.
+In the example I will simulate a situation when an ignite service is deployed on 2 server nodes and is being accessed/executed from one client node. 
 
 ## Ignite Service ? Why to bother ?
 As always we may ask a question should I even bother (to create a service)? and an answer is as obvious as question: it depends. 
@@ -57,7 +57,7 @@ Next few points will point what gains and cons such configuration can bring to o
 OK it's the final time to write some code. Let:
 
 
-`pl.net.gazda.common.BusinessService` interface represents an application business logic and `pl.net.gazda.server.SpringBusinessService` is its simple implementation.
+`pl.net.gazda.common.BusinessService` interface represents an application business logic and `pl.net.gazda.server.SpringBusinessService` will be its simple implementation.
 
 ```java
 public interface BusinessService {
@@ -83,7 +83,7 @@ public class SpringBusinessService implements BusinessService {
 }
 ```
 
-now let’s try to expose this logic as an Ignite service so it can be accessed in a remotely from other nodes.
+now let’s try to expose this logic as an Ignite service so it can be accessed remotely from other nodes.
 
 `pl.net.gazda.common.IgniteBusinessService` combines `pl.net.gazda.common.BusinessService` and `org.apache.ignite.services.Service` interfaces. 
 `org.apache.ignite.services.Service` is an interface which must be implemented if we want to deploy a class as an Ignite service.
@@ -154,20 +154,49 @@ Of course this only a recommendation and nothing and no one will stop you to do 
 > Please note that in my implementation I used a transient modifier. Why it’s necessary to do this ? If we don’t mark `SpringBusinessService` or `Ignite` instance as `transient` Ignite will try to serialize both instances and try to send them to other nodes - and please believe me, we don’t want to do this (this will also lead to an error). 
 
 But does it mean that after the service is automatically deployed on other node those instances will be NULL ? No - Ignite will automatically inject a correct bean during the service deployment phase. 
+Now let's move to the client side. `pl.net.gazda.client.ClientService' demonstrates how the service can obtained and executed.
+```java
+@Scheduled(fixedRate = 1000, initialDelay = 1000)
+public void simulateIgniteServiceExecution() {
+    LOG.info("Executing service and getting result: " + igniteService().someOperation());
+}
 
-TODO
-... access the service ..
+private IgniteBusinessService igniteService() {
+    return ignite.services(getServerCluster()) //getting service from all server nodes
+            .serviceProxy(IgniteBusinessService.NAME, IgniteBusinessService.class, false); //sticky session set to false
+}
 
+private ClusterGroup getServerCluster() {
+    return ignite.cluster().forServers();
+}
+```
 
-... start example ....
-
-You can start the sample by running pl.net.gazda.SpringRunner.main() method. It starts three separate spring contexts: 2 with server node and one client node context.
-
+You can start a whole application sample by running `pl.net.gazda.SpringRunner.main()` method. It starts three separate spring contexts: 2 with server node and one client node context.
+```java
 public static void main(String[] args) {
    startIgniteServerContext();
    startIgniteServerContext();
    startIgniteClientContext();
 }
+```
 
-you can see 2 started and running server nodes and a client node which executes ignite service in a RoundRobin fashion.
+in the log you can see two started and running server nodes and a client node which executes ignite service in a RoundRobin fashion against both (two) server nodes.
 
+```
+>>> Local node [ID=F515F616-0BF2-41B6-A738-A706EAC894DB, order=1, clientMode=false]
+...
+>>> Local node [ID=11FF099D-6E31-4D0D-A981-8505D52E16C1, order=3, clientMode=false]
+...
+Topology snapshot [ver=3, servers=2, clients=1, CPUs=4, heap=1.8GB]
+...
+INFO  pl.net.gazda.server.SimpleIgniteService - [] Node: f2b0edeb-420b-499a-84f6-f28272a3671c - service deployed.
+...
+INFO  pl.net.gazda.server.SimpleIgniteService - [] Node: 15827770-3474-402b-9f75-f2f22ebf9260 - service deployed.
+...
+INFO  pl.net.gazda.server.SimpleIgniteService - [] Node: 11ff099d-6e31-4d0d-a981-8505d52e16c1 - delegating operation to spring service.
+INFO  pl.net.gazda.client.ClientService - [] Executing service and getting result: Result from 11ff099d-6e31-4d0d-a981-8505d52e16c1
+...
+INFO  pl.net.gazda.server.SimpleIgniteService - [] Node: f515f616-0bf2-41b6-a738-a706eac894db - delegating operation to spring service.
+INFO  pl.net.gazda.client.ClientService - [] Executing service and getting result: Result from f515f616-0bf2-41b6-a738-a706eac894db
+...
+```
