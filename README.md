@@ -52,7 +52,7 @@ Next few points will point what gains and cons such configuration can bring to o
 * ...
 
 
-# Problem / code example
+# Code example
 
 OK it's the final time to write some code. Let:
 
