@@ -10,6 +10,5 @@ public class Application {
         ctx.refresh();
 
         ctx.getBean(Ignite.class).getOrCreateCache("testCache");
-        ctx.getBean(Ignite.class).getOrCreateCache("PropertyRoomTypeId");
     }
 }
