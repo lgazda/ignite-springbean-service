@@ -17,7 +17,8 @@ We will try to collect few points which may give you some hint or force you to t
 Please don't treat the list below as some kind of check list or classifier also you shouldn't expose the whole of your logic as Ignite services - approach should always fit to your application architecture and to a problem. 
 
 ### When we can/should use Ignite services and what we can gain using them 
-* when we want to execute a specific business logic located on the server node 
+* when we want to execute a specific business logic located on the server node
+** best option is if the service logic accesses only local data
 * we are hiding business logic details, client node doesn't need to know what logic/piece of code is needed to be executed on the server node
 * we gain clean code and concern separation - logic is kept on the server side and client gets only a nice interface
 * client side doesn’t need to think about ignite jobs creation
@@ -30,7 +31,11 @@ Please don't treat the list below as some kind of check list or classifier also 
 * when we are using Ignite nodes as a compute cluster 
 * when we want to broadcast some task  
 * when we want to create and run dynamic tasks
+* when we want to run a dynamic affinity collocated task
+** we can get a cluster group based on affinity and then run the job against selected nodes (then we can be sure that selected nodes contains local data)
+** please note that the service can be also deployed based of affinity https://apacheignite.readme.io/docs/service-grid#section-affinity-key-based-deployment
 * whenever we think it's the right thing
+
 
 ## Service Thread Pool 
 
