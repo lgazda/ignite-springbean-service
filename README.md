@@ -21,10 +21,13 @@ Please don't treat the list below as some kind of check list or classifier also 
 * we are hiding business logic details, client node doesn't need to know what logic/piece of code is needed to be executed on the server node
 * we gain clean code and concern separation - logic is kept on the server side and client gets only a nice interface
 * client side doesn’t need to think about ignite jobs creation
+* client side doesn't need to know/think about job distribution / cluster selection
+** service can be deployed on the specific nodes only (based on some predicate) 
+** client only says: "give me the service" and execute it
 * whenever we think it's the right thing 
 
 ### When not to use services or when to use plain Ignite jobs
-* when we are using Ignite nodes as a compute cluster
+* when we are using Ignite nodes as a compute cluster 
 * when we want to broadcast some task  
 * when we want to create and run dynamic tasks
 * whenever we think it's the right thing
